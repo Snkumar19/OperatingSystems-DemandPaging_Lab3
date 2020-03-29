@@ -28,7 +28,35 @@ SYSCALL vcreate(procaddr,ssize,hsize,priority,name,nargs,args)
 	long	args;			/* arguments (treated like an	*/
 					/* array in the code)		*/
 {
-	kprintf("To be implemented!\n");
+	// kprintf("To be implemented!\n");
+	// Process is still created using create 
+	// Get BSM as private heap
+	// Then map the BSM to the process
+	STATWORD ps;
+	disable(ps);
+	
+	int userpid = create(procaddr,ssize,priority,name,nargs,args);
+	int avail;			
+	int bs_id = get_bsm(avail);	
+	
+	if (bs_id == SYSERR || hsize < 0 || hsize > 128 || userpid == SYSERR){
+		kprintf("VCreate Error - Invalid BSM/HSize or PID !\n");	
+		restore(ps);
+		return SYSERR;
+	}
+
+	int bsm_val = bsm_map(userpid, 4096, avail, hsize);
+	
+	// BSM_MAP writes the values for store and vpno, we need to update bsm_tab for virtualHeap
+	// ProcTab entry for vheapsize and update vmemlist
+	//
+	
+	proctab[userpid].vhpnpages = hsize;
+	proctab[userpid].vmemlist->mnext = 4096*NBPG;
+	
+	bsm_tab[avail].bs_privHeap = 1;
+ 	
+	restore(ps);
 	return OK;
 }
 

@@ -48,6 +48,7 @@ typedef struct{
   int bs_vpno;				/* starting virtual page number */
   int bs_npages;			/* number of pages in the store */
   int bs_sem;				/* semaphore mechanism ?	*/
+  int bs_privHeap;			/* Is the BSM a private Heap  created using vcreate*/
 } bs_map_t;
 
 typedef struct{
@@ -75,6 +76,7 @@ SYSCALL write_bs(char *, bsd_t, int);
 #define NBPG		4096	/* number of bytes per page	*/
 #define FRAME0		1024	/* zero-th frame		*/
 #define NFRAMES 	1024	/* number of frames		*/
+#define NBSM 		16 	/* 16 Backing stores */
 
 #define BSM_UNMAPPED	0
 #define BSM_MAPPED	1
@@ -87,7 +89,7 @@ SYSCALL write_bs(char *, bsd_t, int);
 #define FR_DIR		2
 
 #define SC 3
-#define FIFO 4
+#define LFU 4
 
 #define BACKING_STORE_BASE	0x00800000
-#define BACKING_STORE_UNIT_SIZE 0x00100000
+#define BACKING_STORE_UNIT_SIZE 0x0007FFFF

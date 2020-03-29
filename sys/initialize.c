@@ -36,6 +36,8 @@ struct	mblock	memlist;	/* list of free memory blocks		*/
 #ifdef	Ntty
 struct  tty     tty[Ntty];	/* SLU buffers and mode control		*/
 #endif
+fr_map_t frm_tab[NFRAMES];	/* Frame table */
+bs_map_t bsm_tab[NBSM]; 	/* Backing store table */
 
 /* active system status */
 int	numproc;		/* number of live user processes	*/
@@ -210,6 +212,14 @@ sysinit()
 
 	rdytail = 1 + (rdyhead=newqueue());/* initialize ready list */
 
+	/*Demand paging changes*/
+	for (i=0 ; i<NPROC ; i++)       
+	{
+                proctab[i].store = -1;
+         	proctab[i].vhpno = -1;
+	}
+	init_bsm();
+	init_frm();
 
 	return(OK);
 }
