@@ -12,7 +12,7 @@
 #include <io.h>
 #include <paging.h>
 
-/*#define DETAIL */
+#define DETAIL 1 
 #define HOLESIZE	(600)	
 #define	HOLESTART	(640 * 1024)
 #define	HOLEEND		((1024 + HOLESIZE) * 1024)  
@@ -39,6 +39,10 @@ struct  tty     tty[Ntty];	/* SLU buffers and mode control		*/
 fr_map_t frm_tab[NFRAMES];	/* Frame table */
 bs_map_t bsm_tab[NBSM]; 	/* Backing store table */
 
+int CircularQueue[NFRAMES];  	/* Circular Queue for SC */
+int SCQHead = EMPTY;		/* Head for SCQueue */ 
+int SCQTail = EMPTY;		/* Tail for the Queue */
+
 /* active system status */
 int	numproc;		/* number of live user processes	*/
 int	currpid;		/* id of currently running process	*/
@@ -50,6 +54,7 @@ int	console_dev;		/* the console device			*/
 
 /*  added for the demand paging */
 int page_replace_policy = SC;
+extern fr_map_t frm_tab[];
 
 /************************************************************************/
 /***				NOTE:				      ***/
@@ -79,9 +84,11 @@ nulluser()				/* babysit CPU when no one is home */
 
 	kprintf("system running up!\n");
 	sysinit();
+	kprintf("before enabling Interrupts !\n");
 
 	enable();		/* enable interrupts */
-
+	
+	kprintf("after enabling Interrupts !\n");
 	sprintf(vers, "PC Xinu %s", VERSION);
 	kprintf("\n\n%s\n", vers);
 	if (reboot++ < 1)
@@ -213,14 +220,37 @@ sysinit()
 	rdytail = 1 + (rdyhead=newqueue());/* initialize ready list */
 
 	/*Demand paging changes*/
+	
+	// Section 4.3.4 System Initialization
+	
+	// 4.3.4 - 2 : Initialize all necessary data structures
+	
 	for (i=0 ; i<NPROC ; i++)       
 	{
-                proctab[i].store = -1;
+                proctab[i].pdbr = 0;
+		proctab[i].store = -1;
          	proctab[i].vhpno = -1;
+		proctab[i].vhpnpages = 0;
+		proctab[i].vmemlist = NULL;
 	}
+	
 	init_bsm();
 	init_frm();
+	
+	// 4.3.4 - 3 : Create Page Tables and make the first 4 global
+	init_pt(NULLPROC, 0);
+        
+	// 4.3.4 - 4 : Allocate and Initialize Page Directory for NULL Process
+	allocate_page_directory(NULLPROC, 0, 0, 0);
+	
+	// 4.3.4 - 5 : Set the PDBR register to the page directory for the NULL process
+	//kprintf("\n Value of NULLPROC PDBR %lu \n", proctab[NULLPROC].pdbr);
+	write_cr3(proctab[NULLPROC].pdbr);
 
+	// 4.3.4 - 6 : Install the page fault interrupt service routine.
+	set_evec(14, pfintr);
+	// 4.3.4 - 7 : Enable paging
+	enable_paging();
 	return(OK);
 }
 
@@ -274,3 +304,4 @@ long sizmem()
 	}
 	return npages;
 }
+

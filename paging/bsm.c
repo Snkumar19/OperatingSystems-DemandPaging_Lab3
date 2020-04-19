@@ -16,7 +16,7 @@ SYSCALL init_bsm()
 
 	int i = 0;
 
-	kprintf("\n Init BSM");
+	//kprintf("\n Init BSM");
 	for (i = 0; i < NBSM; i++)
 	{
 		bsm_tab[i].bs_status = BSM_UNMAPPED;
@@ -84,8 +84,6 @@ SYSCALL free_bsm(int i)
  */
 SYSCALL bsm_lookup(int pid, long vaddr, int* store, int* pageth)
 {
-	STATWORD ps;
-	disable(ps);
 	
 	/* Find PD and page number from Virtaul address - right shift by 12 (4k))*/
 
@@ -100,11 +98,9 @@ SYSCALL bsm_lookup(int pid, long vaddr, int* store, int* pageth)
 		{
 			*pageth = virtpage - bsm_tab[i].bs_vpno;
 			*store = i;
-			restore(ps);
 			return (OK);
 		}
 	}	
-	restore(ps);
 	return(SYSERR);
 }
 
@@ -117,7 +113,13 @@ SYSCALL bsm_map(int pid, int vpno, int source, int npages)
 {
 	STATWORD ps;
         disable(ps);
-	
+	/*	
+	if ( vpno > 128 || vpno < 0 )
+	{
+		restore(ps);
+		return SYSERR;
+	}	
+	*/
 	bsm_tab[source].bs_status = BSM_MAPPED;
         bsm_tab[source].bs_pid = pid;
         bsm_tab[source].bs_vpno = vpno;

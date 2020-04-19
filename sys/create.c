@@ -95,7 +95,9 @@ SYSCALL create(procaddr,ssize,priority,name,nargs,args)
 	*--saddr = 0;		/* %esi */
 	*--saddr = 0;		/* %edi */
 	*pushsp = pptr->pesp = (unsigned long)saddr;
-
+	
+	/* When a process is created, Allocate PD*/
+	allocate_page_directory (pid, 0, 0, 0);
 	restore(ps);
 
 	return(pid);

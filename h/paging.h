@@ -62,6 +62,12 @@ typedef struct{
 
 extern bs_map_t bsm_tab[];
 extern fr_map_t frm_tab[];
+
+/* Circular Queue for SC */
+
+extern int CircularQueue[];
+extern int SCQHead ;
+extern int SCQTail ;
 /* Prototypes for required API calls */
 SYSCALL xmmap(int, bsd_t, int);
 SYSCALL xunmap(int);
@@ -73,11 +79,24 @@ SYSCALL release_bs(bsd_t);
 SYSCALL read_bs(char *, bsd_t, int);
 SYSCALL write_bs(char *, bsd_t, int);
 
+/*--------- SystemCalls for Pageing ----------------*/
+extern int page_replace_policy;
+int allocate_page_directory (int, int, int, int);
+int init_pt (int, int);
+
+SYSCALL init_SC();
+SYSCALL enqueue_FrametoSC(int frame);
+SYSCALL dequeue_FrametoSC();
+void PrintCirularQueue();
+SYSCALL get_FrameUsingSC();
+
+SYSCALL get_FrameUsingLFU();
+
 #define NBPG		4096	/* number of bytes per page	*/
 #define FRAME0		1024	/* zero-th frame		*/
 #define NFRAMES 	1024	/* number of frames		*/
 #define NBSM 		16 	/* 16 Backing stores */
-
+#define VPFRAME0	4096	/* Start of Frame for Virtual Memeory */
 #define BSM_UNMAPPED	0
 #define BSM_MAPPED	1
 
@@ -92,4 +111,5 @@ SYSCALL write_bs(char *, bsd_t, int);
 #define LFU 4
 
 #define BACKING_STORE_BASE	0x00800000
-#define BACKING_STORE_UNIT_SIZE 0x0007FFFF
+#define BACKING_STORE_UNIT_SIZE 0x00080000
+

@@ -51,7 +51,9 @@ SYSCALL xmunmap(int virtpage)
         for ( i = 0; i < NFRAMES; i++){
                 if (frm_tab[i].fr_pid == currpid && frm_tab[i].fr_type == FR_DIR){
                         int page, src;
+			/* virtpage X 4k */
                         bsm_lookup( currpid , (virtpage << 12) , &src, &page);
+			/* Write PD to back to BS in case some process unmaps it */
                         write_bs ( ((i + NFRAMES) << 12), src, page);
                 }
         } 

@@ -52,12 +52,17 @@ SYSCALL vcreate(procaddr,ssize,hsize,priority,name,nargs,args)
 	//
 	
 	proctab[userpid].vhpnpages = hsize;
-	proctab[userpid].vmemlist->mnext = 4096*NBPG;
+	proctab[userpid].vmemlist->mnext = VPFRAME0*NBPG;  // Basically 0x1000000H
 	
+	kprintf ("VCreate - BSM ID: %d, BSM_VAL: %d, HSize: %d, Proctab-VmemList: %d\n", avail, bsm_val, hsize, proctab[userpid].vmemlist->mnext);	
+	struct mblock *vmemtoBSM =  BACKING_STORE_BASE + (BACKING_STORE_UNIT_SIZE*avail);
+	vmemtoBSM->mlen = NBPG*hsize;
+	vmemtoBSM->mnext = NULL;	
 	bsm_tab[avail].bs_privHeap = 1;
- 	
+ 	kprintf ("VCreate - Physical BSM Address:  %d, vMemtoBSM Size: %d\n", vmemtoBSM, vmemtoBSM->mlen);
+	
 	restore(ps);
-	return OK;
+	return (userpid);
 }
 
 /*------------------------------------------------------------------------
