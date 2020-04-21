@@ -40,6 +40,7 @@ SYSCALL create(procaddr,ssize,priority,name,nargs,args)
 	if (((saddr = (unsigned long *)getstk(ssize)) ==
 	    (unsigned long *)SYSERR ) ||
 	    (pid=newpid()) == SYSERR || priority < 1 ) {
+		//kprintf ("\n Create Error - Function PID - %d \n", pid);
 		restore(ps);
 		return(SYSERR);
 	}
@@ -111,12 +112,15 @@ LOCAL int newpid()
 {
 	int	pid;			/* process id to return		*/
 	int	i;
-
+	
 	for (i=0 ; i<NPROC ; i++) {	/* check all NPROC slots	*/
 		if ( (pid=nextproc--) <= 0)
 			nextproc = NPROC-1;
 		if (proctab[pid].pstate == PRFREE)
 			return(pid);
+		//else 
+		//	kprintf("%o \n", proctab[pid].pstate);
 	}
+	//kprintf (" newPID returning SYSERR, NPROC is %d nextproc is %d \n", NPROC, nextproc);
 	return(SYSERR);
 }

@@ -391,7 +391,6 @@ page_table_init.o: ../paging/page_table_init.c /usr/include/stdc-predef.h \
  ../h/paging.h
 pfint.o: ../paging/pfint.c /usr/include/stdc-predef.h ../h/conf.h \
  ../h/kernel.h ../h/systypes.h ../h/mem.h ../h/paging.h ../h/proc.h
-pfintr.o: ../paging/pfintr.c /usr/include/stdc-predef.h
 policy.o: ../paging/policy.c /usr/include/stdc-predef.h ../h/conf.h \
  ../h/kernel.h ../h/systypes.h ../h/mem.h ../h/paging.h
 read_bs.o: ../paging/read_bs.c /usr/include/stdc-predef.h ../h/conf.h \
@@ -475,7 +474,7 @@ ionull.o: ../sys/ionull.c /usr/include/stdc-predef.h ../h/conf.h \
  ../h/kernel.h ../h/systypes.h ../h/mem.h
 kill.o: ../sys/kill.c /usr/include/stdc-predef.h ../h/conf.h \
  ../h/kernel.h ../h/systypes.h ../h/mem.h ../h/proc.h ../h/sem.h \
- ../h/io.h ../h/q.h ../h/stdio.h
+ ../h/io.h ../h/q.h ../h/stdio.h ../h/paging.h
 kprintf.o: ../sys/kprintf.c /usr/include/stdc-predef.h ../h/conf.h \
  ../h/kernel.h ../h/systypes.h ../h/mem.h ../h/tty.h
 kputc.o: ../sys/kputc.c /usr/include/stdc-predef.h ../h/conf.h \

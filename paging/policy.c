@@ -6,6 +6,7 @@
 
 
 extern int page_replace_policy;
+extern int policy_DEBUG ;
 /*-------------------------------------------------------------------------
  * srpolicy - set page replace policy 
  *-------------------------------------------------------------------------
@@ -25,6 +26,7 @@ SYSCALL srpolicy(int policy)
 	}
 
 	page_replace_policy = policy;
+	policy_DEBUG = 1;
 	//kprintf("To be implemented!\n");
 	restore(ps);
   	return OK;

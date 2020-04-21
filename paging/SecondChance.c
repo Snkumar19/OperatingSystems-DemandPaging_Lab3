@@ -143,7 +143,7 @@ void PrintCirularQueue()
 
                 }
         }
-        kprintf("\n %d \n", SCQHead);
+        kprintf("\n Head is at %d and Tail is %d \n", SCQHead, SCQTail);
 
 }
 
@@ -156,7 +156,8 @@ void PrintCirularQueue()
 SYSCALL get_FrameUsingSC()
 {
 
-  	kprintf("Second Chance!\n");
+  	//kprintf("Second Chance!\n");
+	//PrintCirularQueue();
   	int SCQHead_pos = SCQHead, SCQTail_pos = SCQTail, return_val = -1;
         if(isEmptyQueue() == OK)
         {
@@ -196,10 +197,12 @@ SYSCALL get_FrameUsingSC()
 				/* Delete element from array and return the frame number */	
 				int i ;
 				return_val = CircularQueue[SCQHead_pos];
-				for ( i = SCQHead_pos ; i <= SCQTail - 1; i++) 
-					 CircularQueue[i] =  CircularQueue[i-1];
+				delete_SCEntryFromQueue(SCQHead_pos);
 				frameObtained = 1;
 				SCQTail--;
+				if (policy_DEBUG)
+					kprintf ("Second Chance Replaced Frame : %d\n", return_val);
+				break;
 			}
 			/* Go to the next element */	
 			SCQHead_pos++;
@@ -212,6 +215,29 @@ SYSCALL get_FrameUsingSC()
 
 	else
 	   	kprintf ("SC - Hitting Else case \n");	
+	
+	//PrintCirularQueue();
+
 	return return_val;
 }
 
+
+void delete_SCEntryFromQueue(int pos)
+{
+	int i = 0;
+	for ( i = pos+1 ; i <= SCQTail ; i++)
+        	CircularQueue[i-1] =  CircularQueue[i];
+
+}
+
+int findFrameinQueue(int frameNo)
+{
+	int i = 0;
+	for ( i = 0; i < NFRAMES; i++)
+	{
+		if (frameNo == CircularQueue[i])
+			return i;
+
+	}
+	return SYSERR;
+}

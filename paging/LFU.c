@@ -7,7 +7,6 @@
 
 SYSCALL get_FrameUsingLFU() {
 
-	kprintf ("\n LFU ");
 	int i = 0, lowest_refCnt = MAXINT, frameCorrespondingToLowest = SYSERR;
 	for ( i = 0 ; i < NFRAMES ; i++) {
 		if (frm_tab[i].fr_status == FRM_MAPPED && frm_tab[i].fr_type == FR_PAGE) {
@@ -18,6 +17,8 @@ SYSCALL get_FrameUsingLFU() {
 			}			
 
 		}
-	}	
-	return i;
+	}
+	if (policy_DEBUG)
+		kprintf("LFU is replacing Frame: %d\n",frameCorrespondingToLowest);	
+	return frameCorrespondingToLowest;
 }

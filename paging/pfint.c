@@ -9,12 +9,16 @@
  * pfint - paging fault ISR
  *-------------------------------------------------------------------------
  */
+
+int pfCounter = 0;
 SYSCALL pfint()
 {
 	STATWORD ps;
 	disable(ps);
 	
-	//kprintf("\n PageFault \t");
+	
+	//if (pfCounter > 27 )
+	//	shutdown();
 	unsigned long faulted_Address;
 	virt_addr_t* faulted_vAddress;
   	unsigned int faulted_pd, faulted_pt, faulted_pg;
@@ -36,6 +40,7 @@ SYSCALL pfint()
 	
 	pd_t* pde; pt_t* pte;
 
+	//kprintf("\n PageFault - %d at  %lu \t", ++pfCounter, faulted_Address);
 	unsigned long baseAddress = pd + faulted_pd*sizeof(pd_t);
 	pde = baseAddress;		
 	if (pde->pd_pres == 0)
@@ -43,10 +48,11 @@ SYSCALL pfint()
 			
 		int pd_frm_offset  = pde->pd_base - FRAME0;
 		frm_tab[pd_frm_offset].fr_refcnt++;
-		//kprintf(" - Case 1 \n");
+		//kprintf(" - Case 1 \t");
 		int frmNumber = init_pt(currpid, 1); 
 		if (frmNumber == SYSERR)
 		{
+			kprintf ("PFINT ERROR: CASE-1,1 Killing Proc \n");
 			kill(currpid);  
 			restore(ps);
 			return SYSERR;
@@ -54,6 +60,7 @@ SYSCALL pfint()
 		int return_val = allocate_page_directory (currpid, baseAddress, frmNumber, 1); 	
 		if (return_val == SYSERR)
                 {
+			kprintf ("PFINT ERROR: CASE-1,2 Killing Proc \n");
                         kill(currpid);
                         restore(ps);
                         return SYSERR;
@@ -69,6 +76,7 @@ SYSCALL pfint()
 		int avail = 0;
 		if (get_frm(&avail) == SYSERR)
 		{
+			kprintf ("PFINT ERROR: CASE-2,1 Killing Proc \n");
 			kill(currpid);
 			restore(ps);
 			return SYSERR;
@@ -77,6 +85,7 @@ SYSCALL pfint()
 		int pageth = 0;
 		if (bsm_lookup (currpid, faulted_Address, &store, &pageth) == SYSERR)
 		{
+			kprintf ("PFINT ERROR: CASE-2,2 Killing Proc \n");
 			kill(currpid);
                         restore(ps);
                         return SYSERR;
@@ -96,10 +105,8 @@ SYSCALL pfint()
 		read_bs((char*)(pte->pt_base<<12), store, pageth);	
 
 		//Frame needs to be inserted as per Replacement Policy
-		if ( page_replace_policy == SC )
-			enqueue_FrametoSC(avail);
+		enqueue_FrametoSC(avail);
 	}
-
 	write_cr3(pd);
 	
 	restore(ps);

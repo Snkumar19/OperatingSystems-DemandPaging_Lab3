@@ -9,6 +9,7 @@
 #define	NPROC		30		/*  allowed if not already done	*/
 #endif
 
+
 #ifndef	_NFILE
 #define _NFILE		20		/* # of files allowed */
 #endif
@@ -77,6 +78,12 @@ struct	pentry	{
         int     vhpno;                  /* starting pageno for vheap    */
         int     vhpnpages;              /* vheap size                   */
         struct mblock *vmemlist;        /* vheap list              	*/
+/* for shared BSM */
+	int 	sharedBSCount;
+	int     sharedstore[16];                  /* backing store for vheap      */
+        int     sharedvhpno[16];                  /* starting pageno for vheap    */
+        int     sharedvhpnpages[16];              /* vheap size                   */
+
 };
 
 

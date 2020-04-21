@@ -21,7 +21,38 @@ SYSCALL xmmap(int virtpage, bsd_t source, int npages)
 		restore(ps);
 		return SYSERR;
 	}
- 	bsm_map( currpid,  virtpage, source, npages) ;
+
+        if ( bsm_tab[source].bs_status == BSM_UNMAPPED )
+        {
+                restore(ps);
+                return SYSERR;
+        }
+
+
+        if ( bsm_tab[source].bs_privHeap == 1)
+        {
+		restore(ps);
+                return SYSERR;
+        }
+        
+       	int pid = currpid;
+	int i = 0, index = 0;
+	for (i = 0; i < bsm_tab[source].bs_sharedProcCnt; i++)
+	{
+		if (bsm_tab[source].bs_sharedPID[i] == currpid)
+		{
+			index = i;
+			break;
+		}
+	} 
+	bsm_tab[source].bs_sharedNPages[index] = npages;
+	bsm_tab[source].bs_sharedVPNO[index] = virtpage;
+
+	proctab[pid].sharedstore[proctab[pid].sharedBSCount] = source;
+	proctab[pid].sharedvhpnpages[proctab[pid].sharedBSCount] = npages;
+	proctab[pid].sharedBSCount++;
+
+
 	restore(ps);
 	return OK;
 
@@ -48,16 +79,23 @@ SYSCALL xmunmap(int virtpage)
  	 * write it back to Backing-Store 
  	 *  
  	 *  */
-        for ( i = 0; i < NFRAMES; i++){
+        /*
+	for ( i = 0; i < NFRAMES; i++){
                 if (frm_tab[i].fr_pid == currpid && frm_tab[i].fr_type == FR_DIR){
                         int page, src;
-			/* virtpage X 4k */
+			// virtpage X 4k 
                         bsm_lookup( currpid , (virtpage << 12) , &src, &page);
-			/* Write PD to back to BS in case some process unmaps it */
+			// Write PD to back to BS in case some process unmaps it 
                         write_bs ( ((i + NFRAMES) << 12), src, page);
                 }
         } 
-	bsm_unmap(currpid, virtpage, 0);
+	*/
+	if ( bsm_unmap(currpid, virtpage, 0) == OK )
+	{
+		restore(ps);
+		return OK;
+	}
+	kprintf("xmunmap - BSM Unmap Failed !\n");
 	restore(ps);
-	return OK;
+	return SYSERR; 
 }

@@ -12,7 +12,7 @@
 #include <io.h>
 #include <paging.h>
 
-#define DETAIL 1 
+#define DETAIL 0 
 #define HOLESIZE	(600)	
 #define	HOLESTART	(640 * 1024)
 #define	HOLEEND		((1024 + HOLESIZE) * 1024)  
@@ -42,7 +42,7 @@ bs_map_t bsm_tab[NBSM]; 	/* Backing store table */
 int CircularQueue[NFRAMES];  	/* Circular Queue for SC */
 int SCQHead = EMPTY;		/* Head for SCQueue */ 
 int SCQTail = EMPTY;		/* Tail for the Queue */
-
+int policy_DEBUG  = 0;
 /* active system status */
 int	numproc;		/* number of live user processes	*/
 int	currpid;		/* id of currently running process	*/
@@ -84,11 +84,11 @@ nulluser()				/* babysit CPU when no one is home */
 
 	kprintf("system running up!\n");
 	sysinit();
-	kprintf("before enabling Interrupts !\n");
+	//kprintf("before enabling Interrupts !\n");
 
 	enable();		/* enable interrupts */
 	
-	kprintf("after enabling Interrupts !\n");
+	//kprintf("after enabling Interrupts !\n");
 	sprintf(vers, "PC Xinu %s", VERSION);
 	kprintf("\n\n%s\n", vers);
 	if (reboot++ < 1)
@@ -123,6 +123,7 @@ nulluser()				/* babysit CPU when no one is home */
 
 	/* create a process to execute the user's main program */
 	userpid = create(main,INITSTK,INITPRIO,INITNAME,INITARGS);
+	//kprintf("Main Function Created at PID - %d \n", userpid);
 	resume(userpid);
 
 	while (TRUE)
@@ -224,7 +225,7 @@ sysinit()
 	// Section 4.3.4 System Initialization
 	
 	// 4.3.4 - 2 : Initialize all necessary data structures
-	
+		
 	for (i=0 ; i<NPROC ; i++)       
 	{
                 proctab[i].pdbr = 0;
@@ -232,6 +233,14 @@ sysinit()
          	proctab[i].vhpno = -1;
 		proctab[i].vhpnpages = 0;
 		proctab[i].vmemlist = NULL;
+		/* Shared BSM */
+		proctab[i].sharedBSCount = 0;
+		for ( j = 0; j < NBSM ; j++)
+		{ 
+			proctab[i].sharedstore[j] = 0;                  /* backing store for vheap      */
+			proctab[i].sharedvhpno[j] = 0;                  /* starting pageno for vheap    */
+			proctab[i].sharedvhpnpages[j] = 0;              /* vheap size                   */
+		}
 	}
 	
 	init_bsm();

@@ -1,5 +1,6 @@
 /* paging.h */
 
+
 typedef unsigned int	 bsd_t;
 
 /* Structure for a page directory entry */
@@ -49,6 +50,11 @@ typedef struct{
   int bs_npages;			/* number of pages in the store */
   int bs_sem;				/* semaphore mechanism ?	*/
   int bs_privHeap;			/* Is the BSM a private Heap  created using vcreate*/
+  /* For Shared BSM - Values	*/
+  int bs_sharedProcCnt;			/* To Denote how many procs share the BSM */
+  int bs_sharedPID[NPROC];		/* To Denote the PID in the orer of coming in */
+  int bs_sharedVPNO[NPROC];		/* To Denote the Starting VPNO for that process */
+  int bs_sharedNPages[NPROC];		/* To Denote Number of pages for that PID */
 } bs_map_t;
 
 typedef struct{
@@ -89,8 +95,11 @@ SYSCALL enqueue_FrametoSC(int frame);
 SYSCALL dequeue_FrametoSC();
 void PrintCirularQueue();
 SYSCALL get_FrameUsingSC();
-
 SYSCALL get_FrameUsingLFU();
+void clearFrameEntry (int , int );
+void delete_proctabEntryAtIndex (int , int );
+void delete_SCEntryFromQueue(int);
+int findFrameinQueue(int);
 
 #define NBPG		4096	/* number of bytes per page	*/
 #define FRAME0		1024	/* zero-th frame		*/
@@ -113,3 +122,4 @@ SYSCALL get_FrameUsingLFU();
 #define BACKING_STORE_BASE	0x00800000
 #define BACKING_STORE_UNIT_SIZE 0x00080000
 
+extern int policy_DEBUG ;

@@ -137,7 +137,7 @@ setsegs()
 
 	//maxaddr = (char *)(npages * NBPG - 1);
 
-	maxaddr = (char *)(4096*NBPG - 1); /* 8MB size */
+	maxaddr = (char *)(NBPG*NBPG - 1); /* 8MB size */
 				 	      /* the top 8MB is used for backing store */
 
 	psd = &gdt_copy[1];	/* kernel code segment */

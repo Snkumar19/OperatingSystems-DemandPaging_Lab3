@@ -8,7 +8,7 @@
 #include <io.h>
 #include <q.h>
 #include <stdio.h>
-
+#include <paging.h>
 /*------------------------------------------------------------------------
  * kill  --  kill a process and remove it from the system
  *------------------------------------------------------------------------
@@ -20,10 +20,40 @@ SYSCALL kill(int pid)
 	int	dev;
 
 	disable(ps);
+	
+
 	if (isbadpid(pid) || (pptr= &proctab[pid])->pstate==PRFREE) {
 		restore(ps);
 		return(SYSERR);
 	}
+	
+	/* Process Destruction */
+	int i = 0, j = 0, done = 0;
+		
+	if (proctab[pid].store != -1)
+	{
+		// This means Process had a Private Heap
+		bsm_unmap (pid, bsm_tab[proctab[pid].store].bs_vpno, 1);
+	}
+	if (proctab[pid].sharedBSCount != 0)
+	{
+		// If the process has any shared BS other than Private Heap
+		for ( i = 0; i < proctab[pid].sharedBSCount; i++ )
+		for ( j = 0; j < bsm_tab[proctab[pid].sharedstore[i]].bs_sharedProcCnt; j ++)
+		{
+			if ( bsm_tab[proctab[pid].sharedstore[i]].bs_sharedPID[j] == pid)
+				bsm_unmap (pid, bsm_tab[proctab[pid].sharedstore[i]].bs_sharedVPNO[j], 0); 	
+		}
+	}
+	
+	for ( i = 0; i < NFRAMES; i++)
+	{
+		if (frm_tab[i].fr_pid == pid && frm_tab[i].fr_type == FR_PAGE)
+		{
+			free_frm(i);
+		}
+	}
+
 	if (--numproc == 0)
 		xdone();
 
