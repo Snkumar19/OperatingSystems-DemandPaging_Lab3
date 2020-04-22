@@ -104,7 +104,7 @@ SYSCALL free_frm(int i)
 		
 	if ( i < 0)
 	{	
-		kprintf ("\n ERROR: Evicting illegal Frame : %d \n", i);
+		kprintf ("\n ERROR: Evicting illegal Frame Number: %d \n", i);
   		return SYSERR;
 	}
 

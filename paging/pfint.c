@@ -40,7 +40,7 @@ SYSCALL pfint()
 	
 	pd_t* pde; pt_t* pte;
 
-	//kprintf("\n PageFault - %d at  %lu \t", ++pfCounter, faulted_Address);
+	//kprintf(" PageFault - %d at  %lu \n", ++pfCounter, faulted_Address);
 	unsigned long baseAddress = pd + faulted_pd*sizeof(pd_t);
 	pde = baseAddress;		
 	if (pde->pd_pres == 0)

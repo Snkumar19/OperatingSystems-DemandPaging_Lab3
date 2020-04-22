@@ -25,13 +25,20 @@ int get_bs(bsd_t bs_id, unsigned int npages) {
 	}
 	/* If BSM is unmapped or, if BSM is mapped and not private heap then Map it */
 	if (bsm_tab[bs_id].bs_status == BSM_UNMAPPED || (bsm_tab[bs_id].bs_status == BSM_MAPPED && bsm_tab[bs_id].bs_privHeap == 0) )
-	{	
+	{
+		if (bsm_tab[bs_id].bs_status == BSM_UNMAPPED)
+			bsm_tab[bs_id].bs_sharedProcCnt = 0;	
 		bsm_tab[bs_id].bs_status = BSM_MAPPED;
 		bsm_tab[bs_id].bs_sharedPID[bsm_tab[bs_id].bs_sharedProcCnt] = currpid;
 		bsm_tab[bs_id].bs_sharedNPages[bsm_tab[bs_id].bs_sharedProcCnt] = npages;
+		//kprintf ("GET BS for %d - Shared PID : %d \n",bs_id, bsm_tab[bs_id].bs_sharedPID[bsm_tab[bs_id].bs_sharedProcCnt]);
+		//kprintf ("GET BS for %d - Shared NPAGES : %d \n",bs_id, bsm_tab[bs_id].bs_sharedNPages[bsm_tab[bs_id].bs_sharedProcCnt]);
+		
 		bsm_tab[bs_id].bs_sharedProcCnt++;
+		//kprintf ("GET BS for %d - Shared Count : %d \n",bs_id, bsm_tab[bs_id].bs_sharedProcCnt);
+		
 		restore(ps);
-		return npages;
+		return bsm_tab[bs_id].bs_sharedNPages[0];
 	}
 
 	restore(ps);

@@ -34,17 +34,24 @@ SYSCALL vcreate(procaddr,ssize,hsize,priority,name,nargs,args)
 	// Then map the BSM to the process
 	STATWORD ps;
 	disable(ps);
-	
-	int userpid = create(procaddr,ssize,priority,name,nargs,args);
-	int avail;			
+	int avail ;	
 	int bs_id = get_bsm(&avail);	
 	
-	if (bs_id == SYSERR || hsize < 0 || hsize > 128 || userpid == SYSERR){
-		kprintf("VCreate Error - Invalid BSM/HSize or PID !\n");	
+	if (bs_id == SYSERR || hsize < 0 || hsize > 128 ){
+		kprintf("VCreate Error - Invalid BSM/HSize !\n");	
 		restore(ps);
 		return SYSERR;
 	}
+	int userpid = create(procaddr,ssize,priority,name,nargs,args);
 	/* Setting Private Heap to use a different Mapping Process for Proc with Priv Heap and Shared BSM*/	
+	// BSM_MAP writes the values for store and vpno, we need to update bsm_tab for virtualHeap
+	// ProcTab entry for vheapsize and update vmemlist
+	//
+	proctab[userpid].store = avail;	
+	proctab[userpid].vhpnpages = hsize;
+	proctab[userpid].vmemlist->mnext = VPFRAME0*NBPG;  // Basically 0x1000000H
+	proctab[userpid].vmemlist->mlen = hsize*NBPG;
+		
 	bsm_tab[avail].bs_privHeap = 1;
 	int bsm_val = bsm_map(userpid, 4096, avail, hsize);
 	
@@ -54,17 +61,6 @@ SYSCALL vcreate(procaddr,ssize,hsize,priority,name,nargs,args)
 		restore(ps);
 		return SYSERR;
 	}
-	else
-	{
-		kprintf("Valid BSM - %d\n", avail);
-	}	
-	// BSM_MAP writes the values for store and vpno, we need to update bsm_tab for virtualHeap
-	// ProcTab entry for vheapsize and update vmemlist
-	//
-	proctab[userpid].store = avail;	
-	proctab[userpid].vhpnpages = hsize;
-	proctab[userpid].vmemlist->mnext = VPFRAME0*NBPG;  // Basically 0x1000000H
-	
 	//kprintf ("VCreate - BSM ID: %d, BSM_VAL: %d, HSize: %d, Proctab-VmemList: %d\n", avail, bsm_val, hsize, proctab[userpid].vmemlist->mnext);	
 	struct mblock *vmemtoBSM =  BACKING_STORE_BASE + (BACKING_STORE_UNIT_SIZE*avail);
 	vmemtoBSM->mlen = NBPG*hsize;

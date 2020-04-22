@@ -22,7 +22,7 @@ WORD	*vgetmem(nbytes)
 	struct	mblock	*p, *q, *leftover;
 
 	disable(ps);
-	if (nbytes==0 || proctab[currpid].vmemlist->mnext== (struct mblock *) NULL) {
+	if (nbytes==0 || proctab[currpid].vmemlist->mnext== (struct mblock *) NULL || nbytes >  proctab[currpid].vmemlist->mlen) {
 		restore(ps);
 		kprintf("VGetMem - Create Issue \n");
 		return( (WORD *)SYSERR);

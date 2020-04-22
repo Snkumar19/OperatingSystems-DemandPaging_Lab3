@@ -21,7 +21,7 @@ SYSCALL kill(int pid)
 
 	disable(ps);
 	
-
+	//kprintf (" kill called for pid: %d\n", pid);
 	if (isbadpid(pid) || (pptr= &proctab[pid])->pstate==PRFREE) {
 		restore(ps);
 		return(SYSERR);
@@ -42,10 +42,21 @@ SYSCALL kill(int pid)
 		for ( j = 0; j < bsm_tab[proctab[pid].sharedstore[i]].bs_sharedProcCnt; j ++)
 		{
 			if ( bsm_tab[proctab[pid].sharedstore[i]].bs_sharedPID[j] == pid)
+			{
+				
 				bsm_unmap (pid, bsm_tab[proctab[pid].sharedstore[i]].bs_sharedVPNO[j], 0); 	
+			}
 		}
 	}
 	
+	for ( i = 0 ; i < NBSM ; i++)
+		if (bsm_tab[i].bs_status == BSM_UNMAPPED )
+		{
+			if ( bsm_tab[i].bs_sharedProcCnt != 0)
+			 	bsm_tab[i].bs_sharedProcCnt = 0;
+			if (  bsm_tab[i].bs_privHeap == 1)
+				 bsm_tab[i].bs_privHeap = 0;	
+		}
 	for ( i = 0; i < NFRAMES; i++)
 	{
 		if (frm_tab[i].fr_pid == pid && frm_tab[i].fr_type == FR_PAGE)

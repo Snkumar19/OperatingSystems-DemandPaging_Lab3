@@ -87,7 +87,7 @@ SYSCALL free_bsm(int i)
 	bsm_tab[i].bs_privHeap = 0;
 	
 	/* Shared BSM Mechanism */
-	bsm_tab[i].bs_sharedProcCnt = 0;
+	//bsm_tab[i].bs_sharedProcCnt = 0;
 	int j = 0 ;
 	for ( j = 0; j < NPROC; j++)
 	{
@@ -244,13 +244,16 @@ SYSCALL bsm_unmap(int pid, int vpno, int flag)
 		for ( i = 0; i < proctab[pid].sharedBSCount ; i ++ )
 		{
 			if (bsm_lookup(pid, vpno << 12, &store, &pageth) != SYSERR)
-			 	break; 
+			 	break;
+			else
+				 kprintf ("ERROR: BSMUNMAP - Lookup Failed \n"); 
 		}
 	}
 
 	if (bsm_tab[store].bs_status == BSM_UNMAPPED) 
 	{
 		kprintf ("ERROR: BSMUNMAP - Unmapping a already unmapped BSM entry \n");
+		restore(ps);
 		return SYSERR;
 
 	}
@@ -262,12 +265,14 @@ SYSCALL bsm_unmap(int pid, int vpno, int flag)
 		//kprintf ("BSMUNMAP - IF Condition \n");
 		clearFrameEntry (store , pid)   ;
 		free_bsm(store);
+		restore(ps);
 		return OK;
 	}
 
 	else if ( bsm_tab[store].bs_privHeap == 1 && bsm_tab[store].bs_pid != pid)
 	{
 		//kprintf ("BSMUNMAP - ELSE IF Condition \n");
+		restore(ps);
 		return SYSERR;
 	}	
 	/* UNMAP SHARED BACKING STORE */ 	
@@ -288,8 +293,12 @@ SYSCALL bsm_unmap(int pid, int vpno, int flag)
 			/* If it is the only one using the BSM - treat it like Private Heap */
 			if (bsm_tab[store].bs_sharedProcCnt == 1)
 			{
+				
+				//kprintf ("BSMUNMAP - SharedCnti == 1 Condition \n");
 				clearFrameEntry (store , pid)	;
 				free_bsm(store);
+				//bsm_tab[store].bs_sharedProcCnt = 0;	
+				restore(ps);
 				return OK;
 			}
 			//kprintf ("BSMUNMAP - SharedCnt > 1 Condition \n");
@@ -306,7 +315,8 @@ SYSCALL bsm_unmap(int pid, int vpno, int flag)
 				}
 			}
 			delete_proctabEntryAtIndex (indexForPID, proctab[pid].sharedBSCount); 
-			bsm_tab[store].bs_sharedProcCnt--;
+			if (bsm_tab[store].bs_sharedProcCnt > 1)
+				bsm_tab[store].bs_sharedProcCnt--;
 			
 			
 			done = 1;	
@@ -315,6 +325,8 @@ SYSCALL bsm_unmap(int pid, int vpno, int flag)
 		restore(ps);
 		return OK;
 	}
+	//kprintf ("BSMUNMAP => NotFoundPIDinBSM ");
+	restore(ps);
 	return SYSERR;
 }
 

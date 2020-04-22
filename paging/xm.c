@@ -24,6 +24,7 @@ SYSCALL xmmap(int virtpage, bsd_t source, int npages)
 
         if ( bsm_tab[source].bs_status == BSM_UNMAPPED )
         {
+		
                 restore(ps);
                 return SYSERR;
         }
@@ -34,9 +35,31 @@ SYSCALL xmmap(int virtpage, bsd_t source, int npages)
 		restore(ps);
                 return SYSERR;
         }
-        
+       		
+	int i = 0, index = 1000;
+	int sumOfAllBSM = 0;
+	int highest  = 0;
+
+	/*		
+	for ( i = 0; i < bsm_tab[source].bs_sharedProcCnt; i++){
+		sumOfAllBSM +=  bsm_tab[source].bs_sharedNPages[i];
+	}
+	*/
+	//kprintf ("XMMAP - bsm_tab[source].bs_sharedProcCnt = %d, sumOfAllBSM = %d, highest = %d \n", bsm_tab[source].bs_sharedProcCnt,sumOfAllBSM, highest );
+	/*
+	if ( sumOfAllBSM > 128 && bsm_tab[source].bs_sharedProcCnt > 0)
+	{
+		kprintf ("XMMAP - bsm_tab[source].bs_sharedProcCnt = %d, sumOfAllBSM = %d, \n", bsm_tab[source].bs_sharedProcCnt,sumOfAllBSM);
+		restore(ps);
+                return SYSERR;
+	}
+	*/	
+	if (bsm_tab[source].bs_sharedProcCnt > 1 && bsm_tab[source].bs_sharedNPages[0] < npages )
+	{
+		restore(ps);
+                return SYSERR;
+	}
        	int pid = currpid;
-	int i = 0, index = 0;
 	for (i = 0; i < bsm_tab[source].bs_sharedProcCnt; i++)
 	{
 		if (bsm_tab[source].bs_sharedPID[i] == currpid)
@@ -45,6 +68,13 @@ SYSCALL xmmap(int virtpage, bsd_t source, int npages)
 			break;
 		}
 	} 
+
+	if (index == 1000)
+	{
+		restore(ps);
+                return SYSERR;
+
+	}
 	bsm_tab[source].bs_sharedNPages[index] = npages;
 	bsm_tab[source].bs_sharedVPNO[index] = virtpage;
 
