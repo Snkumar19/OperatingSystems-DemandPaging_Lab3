@@ -99,7 +99,7 @@ SYSCALL pfint()
 		frm_tab[avail].fr_vpno = faulted_Address>>12;	
 		frm_tab[avail].fr_type = FR_PAGE;
 		
-		int pt_frm_offset  = pte->pt_base + FRAME0;
+		int pt_frm_offset  = pte->pt_base - FRAME0;
 		frm_tab[pt_frm_offset].fr_refcnt++;
 		frm_tab[avail].fr_refcnt++;
 		read_bs((char*)(pte->pt_base<<12), store, pageth);	
